@@ -16,7 +16,7 @@ class DrawGame:
         Canvas.create_circle = _create_circle
 
         self.master = Tk()
-        self.scroll_bar = Scrollbar(self.master, orient="horizontal", length=self.width * 2/3)
+        self.scroll_bar = Scrollbar(self.master, orient="horizontal")
         self.scroll_bar.pack()
 
         self.canvas = Canvas(self.master, width=self.width, height=self.height)
