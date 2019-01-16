@@ -9,6 +9,7 @@ class DrawGame:
     height = 900
     field_width = 12/4
     field_height = 9/4
+    field_image = None
 
     def __init__(self):
 
@@ -20,9 +21,11 @@ class DrawGame:
         self.scroll_bar = Scrollbar(self.master, orient="horizontal")
         self.scroll_bar.pack()
 
-        self.canvas = Canvas(self.master, width=self.width, height=self.height)
-        self.canvas.pack()
+        self.canvas = Canvas(self.master, width=self.width, height=self.height, bg="green")
 
+        self.field_image = PhotoImage(file="images/field.gif")
+
+        self.canvas.pack()
         self.update()
 
     def update(self):
@@ -64,3 +67,5 @@ class DrawGame:
 
     def clear_canvas(self):
         self.canvas.delete("all")
+        # pic's upper left corner (NW) on the canvas is at x=50 y=10
+        self.canvas.create_image(-30, -30, image=self.field_image, anchor=NW)
