@@ -7,8 +7,8 @@ class DrawGame:
     canvas = None
     width = 1200
     height = 900
-    field_width = 12/4
-    field_height = 9/4
+    field_width = 12/6
+    field_height = 9/4.5
     field_image = None
 
     def __init__(self):
