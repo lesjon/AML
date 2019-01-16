@@ -37,9 +37,6 @@ class DrawGame:
     def wait_till_close():
         mainloop()
 
-    def draw_robots(self, data):
-        self.canvas.create_circle(100, 120, 50, fill="blue", outline="#DDD", width=4)
-
     def draw_game_from_json(self, json_file):
         print("draw game from json")
         for json_object in json_file:
