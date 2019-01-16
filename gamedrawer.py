@@ -1,6 +1,7 @@
 from tkinter import *
 from time import sleep
 
+
 class DrawGame:
     master = None
     canvas = None
@@ -21,13 +22,7 @@ class DrawGame:
 
         self.canvas = Canvas(self.master, width=self.width, height=self.height)
         self.canvas.pack()
-        '''
-        self.canvas.create_line(0, 0, 200, 100)
-        self.canvas.create_line(0, 100, 200, 0, fill="red", dash=(4, 4))
 
-        self.canvas.create_rectangle(50, 25, 150, 75, fill="blue")
-        '''
-        self.draw_robots(None)
         self.update()
 
     def update(self):
