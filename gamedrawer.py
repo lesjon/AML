@@ -1,6 +1,14 @@
 from tkinter import *
 import time
 
+def static_vars(**kwargs):
+    def decorate(func):
+        for k in kwargs:
+            setattr(func, k, kwargs[k])
+        return func
+    return decorate
+
+
 
 class DrawGame:
     master = None
@@ -12,6 +20,9 @@ class DrawGame:
     field_image = None
     delete_each_frame = []
     FPS_counter = None
+    framecount = 0
+    n_frames = 10
+    timer = 0
 
     def __init__(self):
 
@@ -25,7 +36,7 @@ class DrawGame:
         self.scroll_bar.pack()
 
         self.FPS_counter = Text(self.master, width=10, height=1, borderwidth=0)
-        self.FPS_counter.pack(anchor="ne")
+        self.FPS_counter.pack(anchor="nw")
 
         self.canvas = Canvas(self.master, width=self.width, height=self.height, bg="green", xscrollcommand=self.scroll_bar.set)
         self.field_image = PhotoImage(file="images/field.gif")
@@ -45,16 +56,10 @@ class DrawGame:
 
     def draw_game_from_json(self, json_file):
         print("draw game from json")
-        start = time.time()
-        n_frames = 100
         for s, json_object in enumerate(json_file):
             self.canvas.xview_moveto(s/len(json_file))
             self.draw_json(json_object)
             self.clear_canvas()
-            if not s % n_frames:
-                self.FPS_counter.delete(1.0, END)
-                self.FPS_counter.insert(INSERT, str(round(n_frames / (time.time() - start))) + "FPS")
-                start = time.time()
             # time.sleep(1/60)
             '''self.master.after(1000/60, self.draw_game_from_json)
             yield'''
@@ -79,8 +84,15 @@ class DrawGame:
             draw_object(ball, 4, "orange")
         self.update()
 
+    @static_vars(s=0, timer=0)
     def clear_canvas(self):
         self.canvas.delete(*self.delete_each_frame)
         self.delete_each_frame = []
-        # pic's upper left corner (NW) on the canvas is at x=50 y=10
-        # self.canvas.create_image(-30, -30, image=self.field_image, anchor=NW)
+
+        self.framecount += 1
+        if not self.framecount % self.n_frames:
+            self.FPS_counter.delete(1.0, END)
+            fps = round(self.n_frames / (time.time() - self.timer))
+            self.FPS_counter.insert(INSERT, str(fps) + "FPS")
+            self.timer = time.time()
+

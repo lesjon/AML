@@ -1,6 +1,3 @@
-import numpy as np
-import pandas
-import matplotlib.pyplot as plt
 import tensorflow as tf
 import gamedrawer
 import jsonToNNInput
@@ -8,18 +5,21 @@ import jsonToNNInput
 if __name__ == '__main__':
     print("Starting project!")
     keep_display_on = True
+    play_whole_match = False
 
     dg = gamedrawer.DrawGame()
 
     NN_input = jsonToNNInput.NNInput("logs/testWriterOutput.json")
 
-    try:
-        dg.draw_game_from_json(NN_input.json_data)
-    except gamedrawer.TclError:
-        print("stopped showing match")
-        keep_display_on = False
+    if play_whole_match:
+        try:
+            dg.draw_game_from_json(NN_input.json_data)
+        except gamedrawer.TclError:
+            print("stopped showing match")
+            keep_display_on = False
 
-    print(list(zip(NN_input.data_keys, NN_input.data[0])))
+    # all_keys = NN_input.data_keys[0] + NN_input.data_keys[1] + NN_input.data_keys[2]
+    # print(list(zip(all_keys, NN_input.data[0])))
 
     index = int(0.8 * len(NN_input.data))
     data_for_train = NN_input.data[:index]
@@ -27,6 +27,10 @@ if __name__ == '__main__':
 
     (data_train, category_train) = data_for_train[:-1], data_for_train[1:]
     (data_test, category_test) = data_for_test[:-1],  data_for_test[1:]
+
+    for frame in data_train:
+        dg.draw_json(NN_input.data_frame_to_dict(frame))
+        dg.clear_canvas()
     if keep_display_on:
         dg.wait_till_close()
     exit()
