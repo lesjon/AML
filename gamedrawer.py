@@ -3,6 +3,9 @@ import time
 
 
 class GameDrawer:
+    """
+    Object with functions to draw SSL game frames on a TKinter canvas
+    """
     master = None
     canvas = None
     width = 1200
@@ -47,6 +50,11 @@ class GameDrawer:
         mainloop()
 
     def draw_game_from_json(self, json_file):
+        """
+        This function is to play a whole match
+        :param json_file: a file containing frames from a game
+        :return:
+        """
         print("draw game from json")
         for s, json_object in enumerate(json_file):
             self.canvas.xview_moveto(s/len(json_file))
@@ -57,6 +65,11 @@ class GameDrawer:
             yield'''
 
     def draw_json(self, json_data):
+        """
+        This function draws one frame in json/ dict format
+        :param json_data: one frame in a dict/ json
+        :return:
+        """
         def draw_object(game_object, size, color):
             vel_vector_factor = 0.01
             x_pos = (game_object['x'] + self.field_width / 2) * self.width / self.field_width
@@ -77,6 +90,10 @@ class GameDrawer:
         self.update()
 
     def clear_canvas(self):
+        """
+        clear the objects which were drawn for one frame
+        :return:
+        """
         self.canvas.delete(*self.delete_each_frame)
         self.delete_each_frame = []
 
