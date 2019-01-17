@@ -2,7 +2,7 @@ from tkinter import *
 import time
 
 
-class DrawGame:
+class GameDrawer:
     master = None
     canvas = None
     width = 1200

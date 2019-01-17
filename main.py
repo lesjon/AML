@@ -1,15 +1,15 @@
 import tensorflow as tf
 import gamedrawer
-import jsonToNNInput
+import jsonGameProcessor
 
 if __name__ == '__main__':
     print("Starting project!")
     keep_display_on = True
     play_whole_match = False
 
-    dg = gamedrawer.DrawGame()
+    dg = gamedrawer.GameDrawer()
 
-    NN_input = jsonToNNInput.NNInput("logs/testWriterOutput.json")
+    NN_input = jsonGameProcessor.JsonToArray("logs/testWriterOutput.json")
 
     if play_whole_match:
         try:
