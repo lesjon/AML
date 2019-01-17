@@ -1,14 +1,6 @@
 from tkinter import *
 import time
 
-def static_vars(**kwargs):
-    def decorate(func):
-        for k in kwargs:
-            setattr(func, k, kwargs[k])
-        return func
-    return decorate
-
-
 
 class DrawGame:
     master = None
@@ -20,7 +12,7 @@ class DrawGame:
     field_image = None
     delete_each_frame = []
     FPS_counter = None
-    framecount = 0
+    frame_count = 0
     n_frames = 10
     timer = 0
 
@@ -84,13 +76,12 @@ class DrawGame:
             draw_object(ball, 4, "orange")
         self.update()
 
-    @static_vars(s=0, timer=0)
     def clear_canvas(self):
         self.canvas.delete(*self.delete_each_frame)
         self.delete_each_frame = []
 
-        self.framecount += 1
-        if not self.framecount % self.n_frames:
+        self.frame_count += 1
+        if not self.frame_count % self.n_frames:
             self.FPS_counter.delete(1.0, END)
             fps = round(self.n_frames / (time.time() - self.timer))
             self.FPS_counter.insert(INSERT, str(fps) + "FPS")
