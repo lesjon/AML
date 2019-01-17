@@ -2,29 +2,33 @@ import numpy as np
 import pandas
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from gamedrawer import DrawGame
+import gamedrawer
 import jsonToNNInput
-
 
 if __name__ == '__main__':
     print("Starting project!")
-    dg = DrawGame()
+    keep_display_on = True
 
-    NNinput = jsonToNNInput.NNInput("logs/testWriterOutput.json")
+    dg = gamedrawer.DrawGame()
 
-    dg.draw_game_from_json(NNinput.json_data)
+    NN_input = jsonToNNInput.NNInput("logs/testWriterOutput.json")
 
-    print("load data from json")
+    try:
+        dg.draw_game_from_json(NN_input.json_data)
+    except gamedrawer.TclError:
+        print("stopped showing match")
+        keep_display_on = False
 
-    print(list(zip(NNinput.data_keys, NNinput.data[0])))
+    print(list(zip(NN_input.data_keys, NN_input.data[0])))
 
-    index = int(0.8*len(NNinput.data))
-    data_for_train = NNinput.data[:index]
-    data_for_test = NNinput.data[index:]
+    index = int(0.8 * len(NN_input.data))
+    data_for_train = NN_input.data[:index]
+    data_for_test = NN_input.data[index:]
 
     (data_train, category_train) = data_for_train[:-1], data_for_train[1:]
     (data_test, category_test) = data_for_test[:-1],  data_for_test[1:]
-    dg.wait_till_close()
+    if keep_display_on:
+        dg.wait_till_close()
     exit()
     print("create model")
     model = tf.keras.models.Sequential([
