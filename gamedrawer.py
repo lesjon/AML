@@ -34,7 +34,7 @@ class GameDrawer:
         self.FPS_counter.pack(anchor="nw")
 
         self.canvas = Canvas(self.master, width=self.width, height=self.height, bg="green", xscrollcommand=self.scroll_bar.set)
-        self.field_image = PhotoImage(file="images/field.gif")
+        self.field_image = PhotoImage(file="../images/field.gif")
         self.canvas.create_image(-30, -30, image=self.field_image, anchor=NW)
         self.canvas.pack()
 
@@ -48,6 +48,45 @@ class GameDrawer:
     @staticmethod
     def wait_till_close():
         mainloop()
+
+    def draw_game_from_nparray(self, nparray):
+            frame = {}
+            frame['robots_yellow'] = []
+            frame['robots_blue'] = []
+            frame['robots_orange'] = []
+            frame['balls'] = []
+            if nparray.size % 6 is not 0:
+                print("[draw_game_from_nparray] Warning! Expected 6 parameters per robot. %d out of %d parameters unaccounted for" % (nparray.size % 6, nparray.size))
+
+            # Fill frame with robots
+            for i in range(0, int( nparray.size / 6)):
+                offset = i * 6
+                if i<=7:
+                    frame['robots_yellow'].append({})     # Create new robot in robots_yellow
+                    frame['robots_yellow'][i]['x']          = nparray[offset + 0]
+                    frame['robots_yellow'][i]['y']          = nparray[offset + 1]
+                    frame['robots_yellow'][i]['x_vel']      = nparray[offset + 2]
+                    frame['robots_yellow'][i]['y_vel']      = nparray[offset + 3]
+                    frame['robots_yellow'][i]['x_orien']    = nparray[offset + 4]
+                    frame['robots_yellow'][i]['y_orien']    = nparray[offset + 5]
+                elif i<= 15:
+                    frame['robots_blue'].append({})     # Create new robot in robots_yellow
+                    frame['robots_blue'][i-8]['x']          = nparray[offset + 0]
+                    frame['robots_blue'][i-8]['y']          = nparray[offset + 1]
+                    frame['robots_blue'][i-8]['x_vel']      = nparray[offset + 2]
+                    frame['robots_blue'][i-8]['y_vel']      = nparray[offset + 3]
+                    frame['robots_blue'][i-8]['x_orien']    = nparray[offset + 4]
+                    frame['robots_blue'][i-8]['y_orien']    = nparray[offset + 5]
+                else:
+                    frame['robots_orange'].append({})     # Create new robot in robots_yellow
+                    frame['robots_orange'][i-16]['x']          = nparray[offset + 0]
+                    frame['robots_orange'][i-16]['y']          = nparray[offset + 1]
+                    frame['robots_orange'][i-16]['x_vel']      = nparray[offset + 2]
+                    frame['robots_orange'][i-16]['y_vel']      = nparray[offset + 3]
+                    frame['robots_orange'][i-16]['x_orien']    = nparray[offset + 4]
+                    frame['robots_orange'][i-16]['y_orien']    = nparray[offset + 5]
+            # Draw frame
+            self.draw_json(frame)
 
     def draw_game_from_json(self, json_file):
         """
@@ -87,6 +126,8 @@ class GameDrawer:
             draw_object(robot, 10, "yellow")
         for robot in json_data['robots_blue']:
             draw_object(robot, 10, "blue")
+        for robot in json_data['robots_orange']:
+            draw_object(robot, 10, "orange")
         for ball in json_data['balls']:
             draw_object(ball, 4, "orange")
         self.update()
