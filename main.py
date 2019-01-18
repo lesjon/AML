@@ -9,7 +9,9 @@ if __name__ == '__main__':
 
     dg = gamedrawer.GameDrawer()
 
-    NN_input = jsonGameProcessor.JsonToArray("logs/testWriterOutput.json")
+    # NN_input = jsonGameProcessor.JsonToArray("logs/testWriterOutput.json")
+
+    NN_input = jsonGameProcessor.JsonToArray("logs/2018-06-18_09-06_ZJUNlict-vs-UMass_Minutebots.log")
 
     if play_whole_match:
         try:
@@ -17,9 +19,6 @@ if __name__ == '__main__':
         except gamedrawer.TclError:
             print("stopped showing match")
             keep_display_on = False
-
-    # all_keys = NN_input.data_keys[0] + NN_input.data_keys[1] + NN_input.data_keys[2]
-    # print(list(zip(all_keys, NN_input.data[0])))
 
     index = int(0.8 * len(NN_input.data))
     data_for_train = NN_input.data[:index]
