@@ -12,7 +12,7 @@ if __name__ == '__main__':
     # NN_input = jsonGameProcessor.JsonToArray("logs/testWriterOutput.json")
 
     NN_input = jsonGameProcessor.JsonToArray("logs/2018-06-18_09-06_ZJUNlict-vs-UMass_Minutebots.log")
-
+    print(len(NN_input.data[0]))
     if play_whole_match:
         try:
             dg.draw_game_from_json(NN_input.json_data)
