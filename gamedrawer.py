@@ -124,9 +124,9 @@ class GameDrawer:
             self.delete_each_frame.append(self.canvas.create_line(x_pos, y_pos, x_pos + x_vel, y_pos + y_vel, width=1))
 
         for robot in json_data['robots_yellow']:
-            draw_object(robot, 10, "yellow")
+            draw_object(robot, 9, "yellow")
         for robot in json_data['robots_blue']:
-            draw_object(robot, 10, "blue")
+            draw_object(robot, 9, "blue")
         # for robot in json_data['robots_orange']:
         #     draw_object(robot, 10, "orange")
         for ball in json_data['balls']:

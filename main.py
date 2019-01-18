@@ -4,10 +4,32 @@ import numpy as np
 import tensorflow as tf
 
 
+def save_nn(nn_model, name="model"):
+    # serialize model to JSON
+    model_json = nn_model.to_json()
+    with open("Saved_models/" + name + ".json", "w") as json_file:
+        json_file.write(model_json)
+    # serialize weights to HDF5
+    nn_model.save_weights("Saved_models/" + name + ".h5")
+    print("Saved model " + name + " to disk")
+
+
+def load_nn(name="model"):
+    # load json and create model
+    json_file = open("Saved_models/" + name + ".json", 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    loaded_model = tf.keras.models.model_from_json(loaded_model_json)
+    # load weights into new model
+    loaded_model.load_weights("Saved_models/" + name + ".h5")
+    print("Loaded model " + name + " from disk")
+    return loaded_model
+
 if __name__ == '__main__':
     print("Starting project!")
-    keep_display_on = False
-    play_whole_match = True
+    keep_display_on = True
+    play_whole_match = False
+    retrain_nn = False
 
     dg = gamedrawer.GameDrawer()
 
@@ -45,8 +67,21 @@ if __name__ == '__main__':
     print("x_train.shape", x_train.shape)
     print("y_train.shape", y_train.shape)
 
-    model.fit(x_train, y_train, epochs=1, batch_size=5)
+    if retrain_nn:
+        # define model where LSTM is also output layer
+        model = tf.keras.models.Sequential()
+        model.add(tf.keras.layers.LSTM(1, return_sequences=True, input_shape=(frame_data_size, 1)))
+        model.add(tf.keras.layers.LSTM(1, return_sequences=True))
+        model.add(tf.keras.layers.LSTM(1, return_sequences=True, activation=None))
+        model.compile(optimizer='adam', loss='mse')
+
+        model.fit(x_train, y_train, epochs=1, batch_size=5)
+        save_nn(model, "rnn")
+    else:
+        model = load_nn("rnn")
+
     prediction = list(model.predict(data_for_test[:1]))
+    print("prediction", prediction, NN_input.data[0])
     dg.draw_json(NN_input.data_frame_to_dict(prediction))
     dg.draw_json(NN_input.data_frame_to_dict(list(data_for_test[0])))
     # make and show prediction
