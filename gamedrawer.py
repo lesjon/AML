@@ -64,21 +64,23 @@ class GameDrawer:
             '''self.master.after(1000/60, self.draw_game_from_json)
             yield'''
 
-    def draw_json(self, json_data):
+    def draw_json(self, json_data, stipple=None):
         """
         This function draws one frame in json/ dict format
         :param json_data: one frame in a dict/ json
         :return:
         """
         def draw_object(game_object, size, color):
-            vel_vector_factor = 0.01
+            y_vel_vector_factor = 4500  # 0.01
+            x_vel_vector_factor = 6000  # 0.01
+            vel_vector_factor = 2  # 0.01
             x_pos = (game_object['x'] + self.field_width / 2) * self.width / self.field_width
             y_pos = (game_object['y'] + self.field_height / 2) * self.height / self.field_height
-            x_vel = (game_object['x_vel'] + self.field_width / 2) * self.width / self.field_width
-            y_vel = (game_object['y_vel'] + self.field_height / 2) * self.height / self.field_height
-            y_vel *= vel_vector_factor
-            x_vel *= vel_vector_factor
-            self.delete_each_frame.append(self.canvas.create_circle(x_pos, y_pos, size, fill=color))
+            x_vel = game_object['x_vel']  #  + self.field_width / 2) * self.width / self.field_width
+            y_vel = game_object['y_vel']  # + self.field_height / 2) * self.height / self.field_height
+            y_vel *= y_vel_vector_factor * vel_vector_factor
+            x_vel *= x_vel_vector_factor * vel_vector_factor
+            self.delete_each_frame.append(self.canvas.create_circle(x_pos, y_pos, size, fill=color, stipple=stipple))
             self.delete_each_frame.append(self.canvas.create_line(x_pos, y_pos, x_pos + x_vel, y_pos + y_vel, width=1))
 
         for robot in json_data['robots_yellow']:

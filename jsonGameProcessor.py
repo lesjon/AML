@@ -33,18 +33,28 @@ class JsonToArray:
             robots_blue_values = []
             robots_yellow_keys = []
             robots_blue_keys = []
-
+            balls_keys = []
+            balls_values = []
+            x_scaling = 6000.0
+            y_scaling = 4500.0
             for robot in values[keys.index(self.object_group_keys[0])]:
+                robot['x_vel'] = robot['x_vel'] / x_scaling
+                robot['y_vel'] = robot['y_vel'] / y_scaling
                 k, v = dict2lists(robot)
                 robots_yellow_keys.extend(k[1:])
                 robots_yellow_values.extend(v[1:])
 
             for robot in values[keys.index(self.object_group_keys[1])]:
+                robot['x_vel'] = robot['x_vel'] / x_scaling
+                robot['y_vel'] = robot['y_vel'] / y_scaling
                 k, v = dict2lists(robot)
                 robots_blue_keys.extend(k[1:])
                 robots_blue_values.extend(v[1:])
 
-            balls_keys, balls_values = dict2lists(values[keys.index(self.object_group_keys[2])][0])
+            for ball in values[keys.index(self.object_group_keys[2])]:
+                ball['x_vel'] = ball['x_vel'] / x_scaling
+                ball['y_vel'] = ball['y_vel'] / y_scaling
+                balls_keys, balls_values = dict2lists(ball)
 
             self.data.append(robots_yellow_values + robots_blue_values + balls_values)
         self.data_keys = [robots_yellow_keys, robots_blue_keys, balls_keys]
@@ -54,6 +64,7 @@ class JsonToArray:
         data_frame_to_dict, takes an array of float in sequence from which is created when instantiating NNInput
         it transforms the array of unordered data back into the readable dict
         """
+        data_frame_copy = list(data_frame)
         # copy first frame as template for dict
         return_dict = copy.deepcopy(self.json_data[0])
         # set the not stored parameters
@@ -63,10 +74,11 @@ class JsonToArray:
         # TODO also add this for the the robot_id's
 
         for group_key, keys_per_group in zip(self.object_group_keys, self.data_keys):
-            for n, data_key in enumerate(keys_per_group):
-                length_of_object = len(return_dict[group_key][0])
-                if group_key in ["robots_yellow", "robots_blue"]:
-                    length_of_object -= 1  # the id was ignored
-                index_in_object_array = int(n / length_of_object)
-                return_dict[group_key][index_in_object_array][data_key] = data_frame.pop(0)
+                for n, data_key in enumerate(keys_per_group):
+                    if len(data_frame_copy):
+                        length_of_object = len(return_dict[group_key][0])
+                        if group_key in ["robots_yellow", "robots_blue"]:
+                            length_of_object -= 1  # the id was ignored
+                        index_in_object_array = int(n / length_of_object)
+                        return_dict[group_key][index_in_object_array][data_key] = data_frame_copy.pop(0)
         return return_dict
