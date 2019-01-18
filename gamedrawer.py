@@ -34,7 +34,7 @@ class GameDrawer:
         self.FPS_counter.pack(anchor="nw")
 
         self.canvas = Canvas(self.master, width=self.width, height=self.height, bg="green", xscrollcommand=self.scroll_bar.set)
-        self.field_image = PhotoImage(file="../images/field.gif")
+        self.field_image = PhotoImage(file="images/field.gif")
         self.canvas.create_image(-30, -30, image=self.field_image, anchor=NW)
         self.canvas.pack()
 
@@ -107,6 +107,7 @@ class GameDrawer:
         """
         This function draws one frame in json/ dict format
         :param json_data: one frame in a dict/ json
+        :param stipple: show these with this stippling
         :return:
         """
         def draw_object(game_object, size, color):
@@ -126,8 +127,8 @@ class GameDrawer:
             draw_object(robot, 10, "yellow")
         for robot in json_data['robots_blue']:
             draw_object(robot, 10, "blue")
-        for robot in json_data['robots_orange']:
-            draw_object(robot, 10, "orange")
+        # for robot in json_data['robots_orange']:
+        #     draw_object(robot, 10, "orange")
         for ball in json_data['balls']:
             draw_object(ball, 4, "orange")
         self.update()

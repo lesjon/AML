@@ -26,17 +26,28 @@ class JsonToArray:
         self.json_data = json.load(read_file)
 
         keys, robots_yellow_keys, robots_blue_keys, balls_keys = [], [], [], []
-
+        x_scaling = 6000.0
+        y_scaling = 4500.0
+        if isinstance(self.json_data, dict):
+            self.json_data = self.json_data['data']
         for json_object in self.json_data:
             keys, values = dict2lists(json_object)
+
+            if len(values[keys.index(self.object_group_keys[0])]) is not 8 \
+                    or len(values[keys.index(self.object_group_keys[1])]) is not 8 \
+                    or len(values[keys.index(self.object_group_keys[2])]) is not 1:
+                print("warning: the line did not have the expected amount of balls and blue and yellow robots\n"
+                      "data sizes were:", len(values[keys.index(self.object_group_keys[0])]),
+                      len(values[keys.index(self.object_group_keys[1])]),
+                      len(values[keys.index(self.object_group_keys[2])]))
+                continue
+
             robots_yellow_values = []
             robots_blue_values = []
             robots_yellow_keys = []
             robots_blue_keys = []
             balls_keys = []
             balls_values = []
-            x_scaling = 6000.0
-            y_scaling = 4500.0
             for robot in values[keys.index(self.object_group_keys[0])]:
                 robot['x_vel'] = robot['x_vel'] / x_scaling
                 robot['y_vel'] = robot['y_vel'] / y_scaling
@@ -55,7 +66,6 @@ class JsonToArray:
                 ball['x_vel'] = ball['x_vel'] / x_scaling
                 ball['y_vel'] = ball['y_vel'] / y_scaling
                 balls_keys, balls_values = dict2lists(ball)
-
             self.data.append(robots_yellow_values + robots_blue_values + balls_values)
         self.data_keys = [robots_yellow_keys, robots_blue_keys, balls_keys]
 
@@ -75,10 +85,13 @@ class JsonToArray:
 
         for group_key, keys_per_group in zip(self.object_group_keys, self.data_keys):
                 for n, data_key in enumerate(keys_per_group):
+                    length_of_object = len(return_dict[group_key][0])
+                    if group_key in ["robots_yellow", "robots_blue"]:
+                        length_of_object -= 1  # the id was ignored
+                    index_in_object_array = int(n / length_of_object)
                     if len(data_frame_copy):
-                        length_of_object = len(return_dict[group_key][0])
-                        if group_key in ["robots_yellow", "robots_blue"]:
-                            length_of_object -= 1  # the id was ignored
-                        index_in_object_array = int(n / length_of_object)
                         return_dict[group_key][index_in_object_array][data_key] = data_frame_copy.pop(0)
+                    else:
+                        return_dict[group_key][index_in_object_array][data_key] = -1
+
         return return_dict

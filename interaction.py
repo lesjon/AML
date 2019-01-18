@@ -93,7 +93,7 @@ def train_cycle(frame, w_h1_o, w_o1_o, w_h1_t, w_o1_t, w_h1_b, w_o1_b, w_h2_o, w
     return state
 
 
-data = file_to_tensor('../Resources/Logs/RD_RT.json')        # Load data from file
+data = file_to_tensor('Resources/Logs/RD_RT.json')        # Load data from file
 predict_frames = 30                                        # Amount of frames to predict into the future.
 x = data[:-predict_frames]
 y = data[predict_frames:]
@@ -120,6 +120,8 @@ py_x = train_cycle(tf_x, w_h1_o, w_o1_o, w_h1_t, w_o1_t, w_h1_b, w_o1_b, w_h2_o,
 loss = tf.losses.mean_squared_error(tf_y, py_x)                             # Loss is calculated taking the mean of the squared error of the output
 train_op = tf.train.AdamOptimizer(1).minimize(loss)                          # Trained with gradient descent
 dg = gamedrawer.GameDrawer()
+# initialize the jsonGameProcessor with the appropriate keys
+RD_RT = jsonGameProcessor.JsonToArray('Resources/Logs/RD_RT.json')
 counter = 0
 with tf.Session() as sess:
     tf.global_variables_initializer().run()
