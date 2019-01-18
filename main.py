@@ -1,25 +1,24 @@
 import tensorflow as tf
 import gamedrawer
-import jsonToNNInput
+import jsonGameProcessor
 
 if __name__ == '__main__':
     print("Starting project!")
     keep_display_on = True
     play_whole_match = False
 
-    dg = gamedrawer.DrawGame()
+    dg = gamedrawer.GameDrawer()
 
-    NN_input = jsonToNNInput.NNInput("logs/testWriterOutput.json")
+    # NN_input = jsonGameProcessor.JsonToArray("logs/testWriterOutput.json")
 
+    NN_input = jsonGameProcessor.JsonToArray("logs/2018-06-18_09-06_ZJUNlict-vs-UMass_Minutebots.log")
+    print(len(NN_input.data[0]))
     if play_whole_match:
         try:
             dg.draw_game_from_json(NN_input.json_data)
         except gamedrawer.TclError:
             print("stopped showing match")
             keep_display_on = False
-
-    # all_keys = NN_input.data_keys[0] + NN_input.data_keys[1] + NN_input.data_keys[2]
-    # print(list(zip(all_keys, NN_input.data[0])))
 
     index = int(0.8 * len(NN_input.data))
     data_for_train = NN_input.data[:index]
