@@ -2,6 +2,10 @@ import json
 import copy
 
 
+x_vels = []
+y_vels = []
+
+
 class JsonToArray:
     """
     JsonToArray is an object that takes a json file with frames from a RoboCup SSL league game
@@ -26,8 +30,8 @@ class JsonToArray:
         self.json_data = json.load(read_file)
 
         keys, robots_yellow_keys, robots_blue_keys, balls_keys = [], [], [], []
-        x_scaling = 6000.0
-        y_scaling = 4500.0
+        x_scaling = 60
+        y_scaling = 45
         if isinstance(self.json_data, dict):
             self.json_data = self.json_data['data']
         for json_object in self.json_data:
@@ -51,6 +55,8 @@ class JsonToArray:
             for robot in values[keys.index(self.object_group_keys[0])]:
                 robot['x_vel'] = robot['x_vel'] / x_scaling
                 robot['y_vel'] = robot['y_vel'] / y_scaling
+                x_vels.append(robot['x_vel'])
+                y_vels.append(robot['y_vel'])
                 k, v = dict2lists(robot)
                 robots_yellow_keys.extend(k[1:])
                 robots_yellow_values.extend(v[1:])
@@ -58,6 +64,8 @@ class JsonToArray:
             for robot in values[keys.index(self.object_group_keys[1])]:
                 robot['x_vel'] = robot['x_vel'] / x_scaling
                 robot['y_vel'] = robot['y_vel'] / y_scaling
+                x_vels.append(robot['x_vel'])
+                y_vels.append(robot['y_vel'])
                 k, v = dict2lists(robot)
                 robots_blue_keys.extend(k[1:])
                 robots_blue_values.extend(v[1:])
@@ -65,6 +73,8 @@ class JsonToArray:
             for ball in values[keys.index(self.object_group_keys[2])]:
                 ball['x_vel'] = ball['x_vel'] / x_scaling
                 ball['y_vel'] = ball['y_vel'] / y_scaling
+                x_vels.append(ball['x_vel'])
+                y_vels.append(ball['y_vel'])
                 balls_keys, balls_values = dict2lists(ball)
             self.data.append(robots_yellow_values + robots_blue_values + balls_values)
         self.data_keys = [robots_yellow_keys, robots_blue_keys, balls_keys]
