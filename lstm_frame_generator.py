@@ -10,11 +10,12 @@ from scipy.ndimage.interpolation import shift
 from keras.models import Sequential
 from keras.layers import Dense, LSTM
 import jsonGameProcessor
+import jsonGameProcessorV2
 import json
 import gamedrawer
 
-
-np.random.seed(1986)
+# for reproducability
+np.random.seed(1995)
 
 # NN_input = jsonGameProcessor.JsonToArray("logs/testWriterOutput.json")
 # NN_input = jsonGameProcessor.JsonToArray('Resources/Logs/RD_RT.json')
@@ -24,60 +25,49 @@ NN_input = jsonGameProcessor.JsonToArray("logs/2018-06-20_11-18_TIGERs_Mannheim-
 
 
 # The input sequence length that the LSTM is trained on for each output point
-lahead = 2
+input_seq_len = 2
 
 # training parameters passed to "model.fit(...)"
 batch_size = 1
 epochs = 100
 
-# for reproducability
+# make each fragment a sequence
+temp = NN_input.data#[0]
 
-print("original shape:", np.array(NN_input.data).shape)
-prepackaged = np.array([[row] for row in NN_input.data])
-print("reshaped prepackaged.shape:", np.array(prepackaged).shape)
+prepackaged = np.array([[row] for row in temp])
 # length of input sequence
-input_len_sequence = len(NN_input.data)
+input_len_sequence = len(temp)
 # length of input frame
-input_len_frame = len(NN_input.data[0])
-print("input_lens", input_len_sequence, input_len_frame)
+input_len_frame = len(temp[0])
 
-data_input = prepackaged[:-lahead] #gen_uniform_amp(amp=0.1, xn=input_len + to_drop)
+# shift input_seq_len frames for prediction
+data_input = prepackaged[:-input_seq_len]
+expected_output = prepackaged[input_seq_len:]
 
-print("input_lens", len(data_input), len(data_input[0]))
-# set the target to be a N-point average of the input
-expected_output = prepackaged[lahead:]#data_input.rolling(window=tsteps, center=False).mean()
 
 # when lahead > 1, need to convert the input to "rolling window view"
 # https://docs.scipy.org/doc/numpy/reference/generated/numpy.repeat.html
+def create_input_of_right_length(x, y, n_samples_input):
+    print('before repeat Input shape:', x.shape)
+    if n_samples_input > 1:
+        x = np.repeat(x, repeats=n_samples_input, axis=1)
+        x = x
+        for i, c in enumerate(range(x.shape[1])):
+            x[c] = shift(x[c], i, cval=np.NaN)
 
-print('before repeat Input shape:', data_input.shape)
-if lahead > 1:
-    data_input = np.repeat(data_input, repeats=lahead, axis=1)
-    data_input = data_input
-    for i, c in enumerate(range(data_input.shape[1])):
-        data_input[c] = shift(data_input[c], i, cval=np.NaN)
+    # drop the nan
+    y = y[n_samples_input:]
+    x = x[n_samples_input:]
 
-# drop the nan
-expected_output = expected_output[lahead:]
-data_input = data_input[lahead:]
+    # check if there are no NaN left in array
+    if np.argwhere(np.isnan(x)) or np.argwhere(np.isnan(y)):
+        print(np.argwhere(np.isnan(x)))
+        print(np.argwhere(np.isnan(y)))
+    return x, y
 
-print(np.argwhere(np.isnan(data_input)))
-print(np.argwhere(np.isnan(expected_output)))
 
-print('Input shape:', data_input.shape)
-print('Output shape:', expected_output.shape)
-# print('Input head: ')
-# print(data_input.head(1))
-# print('Output head: ')
-# print(expected_output.head(1))
-# print('Input tail: ')
-# print(data_input.tail(1))
-# print('Output tail: ')
-# print(expected_output.tail(1))
-
+data_input, expected_output = create_input_of_right_length(data_input, expected_output, input_seq_len)
 # print('Showing first frame input and expected output')
-# dg.draw_json(NN_input.data_frame_to_dict(data_input.iloc[100, :].tolist()))
-# dg.draw_json(NN_input.data_frame_to_dict(expected_output.iloc[100, :].tolist()), dash=(1, 1))
 # plt.subplot(411)
 # plt.hist(jsonGameProcessor.x_vels, bins=100, range=(-2, 2))
 # plt.subplot(412)
@@ -92,9 +82,9 @@ print('Output shape:', expected_output.shape)
 def create_model(stateful):
     model = Sequential()
     model.add(LSTM(50,
-              input_shape=(lahead, input_len_frame),
-              batch_size=batch_size,
-              stateful=stateful))
+                   input_shape=(input_seq_len, input_len_frame),
+                   batch_size=batch_size,
+                   stateful=stateful))
     model.add(Dense(input_len_frame))
     model.compile(loss='mse', optimizer='adam')
     return model
