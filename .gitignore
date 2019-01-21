@@ -60,3 +60,7 @@ target/
 # computer specific
 venv/
 .idea/
+
+lstm_text_generation\.py
+
+logs/2018-06-20_11-18_TIGERs_Mannheim-vs-ER-Force\.log

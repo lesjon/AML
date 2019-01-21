@@ -10,7 +10,7 @@ NN_input.add_file_to_data("Resources/LogsCut/2018-06-18_09-06_ZJUNlict-vs-UMass_
 
 frame = NN_input.data[0][0]
 with open("logs/lstm_creation.json", 'w') as f:
-    f.write('[\n')
+    f.write('[[\n')
     last_value = None
     for x in range(1000):
         f.write(json.dumps(NN_input.data_frame_to_dict(frame)))
@@ -21,4 +21,4 @@ with open("logs/lstm_creation.json", 'w') as f:
     f.seek(last_value)
     f.truncate()
 
-    f.write('\n]')
+    f.write('\n]]')
