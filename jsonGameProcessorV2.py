@@ -5,8 +5,8 @@ import numpy as np
 
 x_vels = []
 y_vels = []
-x_scaling = 60
-y_scaling = 45
+x_scaling = .01#.0060
+y_scaling = .01#.0045
 clip = True
 
 
@@ -22,14 +22,15 @@ class JsonToArray:
 
     object_group_keys = ["robots_yellow", "robots_blue", "balls"]
 
-    def __init__(self, path_to_file):
+    def __init__(self, path_to_file=''):
         """read the data from the location pointed to by path_to_file and process the file
         :param: path_to_file path to the first file to load
         :return: this object
         """
-        self.add_file_to_data(path_to_file)
+        if path_to_file:
+            self.add_file_to_data(path_to_file)
 
-    def add_file_to_data(self, path):
+    def add_file_to_data(self, path, verbose=2):
         def dict2lists(dict_to_split):
             return list(dict_to_split.keys()), list(dict_to_split.values())
 
@@ -44,11 +45,12 @@ class JsonToArray:
                 if len(values[keys.index(self.object_group_keys[0])]) is not 8 \
                         or len(values[keys.index(self.object_group_keys[1])]) is not 8 \
                         or len(values[keys.index(self.object_group_keys[2])]) is not 1:
-                    print("warning: the line did not have the expected amount of balls and blue and yellow robots\n"
-                          "data sizes were:", len(values[keys.index(self.object_group_keys[0])]),
-                          len(values[keys.index(self.object_group_keys[1])]),
-                          len(values[keys.index(self.object_group_keys[2])]),
-                          "\nthis line is ignored")
+                    if verbose > 0:
+                        print("warning: the line did not have the expected amount of balls and blue and yellow robots\n"
+                              "data sizes were:", len(values[keys.index(self.object_group_keys[0])]),
+                              len(values[keys.index(self.object_group_keys[1])]),
+                              len(values[keys.index(self.object_group_keys[2])]),
+                              "\nthis line is ignored")
                     continue
 
                 robots_yellow_values = []
