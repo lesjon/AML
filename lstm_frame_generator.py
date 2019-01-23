@@ -38,7 +38,7 @@ def create_input_of_right_length(x, y, n_samples_input, n_samples_output):
 def create_model(stateful, batch_size, input_seq_len, input_len_frame, output_seq_len):
     model = Sequential()
     average_input_output = input_seq_len * input_len_frame + output_seq_len * input_len_frame
-    average_input_output //= 200
+    average_input_output //= 2
     model.add(LSTM(average_input_output,
                    input_shape=(input_seq_len, input_len_frame),
                    batch_size=batch_size,
@@ -137,7 +137,7 @@ def main():
 
     print('Creating Stateful Model...')
     model_stateful = create_model(True, batch_size, input_seq_len, input_len_frame, output_seq_len)
-    print(model_stateful.summary())
+    model_stateful.summary()
 
     # create the trainable data:
     print("preparing data...")
@@ -150,6 +150,7 @@ def main():
 
     print('Training')
     with open("logs/lstmlog.txt", "w") as logfile:
+        model_stateful.summary(print_fn=lambda line: logfile.write(line + '\n'))
         for epoch in range(epochs):
             print('Epoch', epoch + 1, '/', epochs)
             # shuffle the fragments
@@ -170,6 +171,7 @@ def main():
                 out_dict.update(history_callback.history)
                 logfile.write(json.dumps(out_dict))
                 logfile.write('\n')
+                logfile.flush()
             if save_model:
                 if epoch in save_model_at_epochs:
                     save_nn(model_stateful, name="lstm" + str(epoch))

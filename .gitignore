@@ -72,3 +72,5 @@ Saved_models/
 logs/lstmlog\.txt
 
 create_test_file\.py
+
+logs/lstmlogdiv200\.txt
