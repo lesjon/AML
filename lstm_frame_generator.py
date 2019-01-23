@@ -5,40 +5,41 @@ More documentation about the Keras LSTM model can be found at
 https://keras.io/layers/recurrent/#lstm
 """
 import numpy as np
-from scipy.ndimage.interpolation import shift
 from keras.models import Sequential
-from keras.layers import Dense, LSTM
-import jsonGameProcessor
+from keras.layers import Dense, LSTM, Reshape
 import jsonGameProcessorV2
-import gamedrawer
+# import gamedrawer
 from save_load_nn import *
-import matplotlib.pyplot as plt
+import json
 
 
-# when lahead > 1, need to convert the input to "rolling window view"
-# https://docs.scipy.org/doc/numpy/reference/generated/numpy.repeat.html
-def create_input_of_right_length(x, y, n_samples_input):
-    print('before repeat Input shape:', x.shape)
-    if n_samples_input > 1:
-        x = np.repeat(x, repeats=n_samples_input, axis=1)
-        x = x
-        for i, c in enumerate(range(x.shape[1])):
-            x[c] = shift(x[c], i, cval=np.NaN)
+def create_input_of_right_length(x, y, n_samples_input, n_samples_output):
+    # print('before repeat Input shape:', x.shape)
+    def reshape_and_shift(fragment, n_samples):
+        fragment_shape = list(fragment.shape)
+        fragment_shape[0] -= (n_samples - 1)
+        fragment_shape[1] += (n_samples - 1)
+        tensor = np.zeros(fragment_shape)
+        for i in range(fragment.shape[0] - (n_samples - 1)):
+            tensor[i] = [fragment[i + n] for n in range(n_samples)]
+        return tensor
 
-    # drop the the just created NaNs
-    y = y[n_samples_input:]
-    x = x[n_samples_input:]
+    x_out = reshape_and_shift(x, n_samples_input)
+    y_out = reshape_and_shift(y, n_samples_output)
+    # cut both to the same length:
+    if x_out.shape[0] > y_out.shape[0]:
+        x_out = x_out[0: y_out.shape[0]]
+    else:
+        y_out = y_out[0: x_out.shape[0]]
 
-    # check if there are no NaN left in array
-    if np.argwhere(np.isnan(x)) or np.argwhere(np.isnan(y)):
-        print(np.argwhere(np.isnan(x)))
-        print(np.argwhere(np.isnan(y)))
-    return x, y
+    return x_out, y_out
 
 
-def create_model(stateful):
+def create_model(stateful, batch_size, input_seq_len, input_len_frame, output_seq_len):
     model = Sequential()
-    model.add(LSTM(50,
+    average_input_output = input_seq_len * input_len_frame + output_seq_len * input_len_frame
+    average_input_output //= 200
+    model.add(LSTM(average_input_output,
                    input_shape=(input_seq_len, input_len_frame),
                    batch_size=batch_size,
                    stateful=stateful,
@@ -59,168 +60,120 @@ def create_model(stateful):
                    dropout=0.01,
                    recurrent_dropout=0.01,
                    implementation=1,
-                   return_sequences=False,
+                   return_sequences=True,  # Needs be true for all but the last layer
                    return_state=False,
                    go_backwards=False,
                    unroll=False))
-    model.add(Dense(input_len_frame))
+    model.add(LSTM(average_input_output,
+                   dropout=0.01,
+                   recurrent_dropout=0.01,
+                   implementation=1,
+                   return_sequences=True))  # Needs be true for all but the last layer)
+    model.add(LSTM(average_input_output))
+    model.add(Dense(output_seq_len * input_len_frame,
+                    activation=None))
+    model.add(Reshape((output_seq_len, input_len_frame)))
     model.compile(loss='mse', optimizer='adam')
     return model
 
 
-# split train/test data
-def split_data(x, y, ratio=0.8):
-    to_train = int(input_len_sequence * ratio)
-    # tweak to match with batch_size
-    to_train -= to_train % batch_size
-
-    x_train = x[:to_train]
-    y_train = y[:to_train]
-    x_test = x[to_train:]
-    y_test = y[to_train:]
-
-    # tweak to match with batch_size
-    to_drop = x.shape[0] % batch_size
-    if to_drop > 0:
-        x_test = x_test[:-1 * to_drop]
-        y_test = y_test[:-1 * to_drop]
-
-    return (x_train, y_train), (x_test, y_test)
+def split_train_test(all_xy, ratio):
+    split_index = int(all_xy.shape[0] * ratio)
+    return all_xy[:split_index], all_xy[split_index:]
 
 
-# split train/test data
-def do_not_split_data(x, y):
-    return (x, y)
+def load_data_reader():
+    data_reader = jsonGameProcessorV2.JsonToArray(keys_to_ignore=('robot_id', 'x_vel', 'y_vel'))
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_09-06_ZJUNlict-vs-UMass_Minutebots.json", verbose=0)
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_14-04_ER-Force-vs-UMass_Minutebots.json", verbose=0)
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_15-34_ER-Force-vs-ZJUNlict.json", verbose=0)
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_19-24_CMμs-vs-TIGERs_Mannheim.json", verbose=0)
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_18-08_UMass_Minutebots-vs-ER-Force.json", verbose=0)
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_21-21_TIGERs_Mannheim-vs-CMμs.json", verbose=0)
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-21_11-36_TIGERs_Mannheim-vs-ZJUNlict.json", verbose=0)
+    # data_reader.add_file_to_data("logs/testfile.json", verbose=2)
+    return data_reader
 
 
-def reshape_2(x, input_len_frame):
-    return x.reshape((x.shape[0], input_len_frame))  # 1
-
-
-# for reproducability
-np.random.seed(1995)
-
-# NN_input = jsonGameProcessor.JsonToArray("logs/testWriterOutput.json")
-# NN_input = jsonGameProcessor.JsonToArray('Resources/Logs/RD_RT.json')
-# NN_input = jsonGameProcessor.JsonToArray("logs/2018-06-18_09-06_ZJUNlict-vs-UMass_Minutebots.log")
-# NN_input = jsonGameProcessor.JsonToArray("logs/2018-06-20_11-18_TIGERs_Mannheim-vs-ER-Force.log")
-NN_input = jsonGameProcessorV2.JsonToArray()
-NN_input.add_file_to_data("Resources/LogsCut/2018-06-18_09-06_ZJUNlict-vs-UMass_Minutebots.json", verbose=0)
-NN_input.add_file_to_data("Resources/LogsCut/2018-06-18_14-04_ER-Force-vs-UMass_Minutebots.json", verbose=0)
-NN_input.add_file_to_data("Resources/LogsCut/2018-06-19_15-34_ER-Force-vs-ZJUNlict.json", verbose=0)
-NN_input.add_file_to_data("Resources/LogsCut/2018-06-19_19-24_CMμs-vs-TIGERs_Mannheim.json", verbose=0)
-NN_input.add_file_to_data("Resources/LogsCut/2018-06-20_18-08_UMass_Minutebots-vs-ER-Force.json", verbose=0)
-
-# plt.hist(jsonGameProcessorV2.x_vels, bins=100, range=(-2, 2))
-# plt.figure()
-# plt.hist(jsonGameProcessorV2.y_vels, bins=100, range=(-2, 2))
-# plt.show()
-# The input sequence length that the LSTM is trained on for each output point
-input_seq_len = 1
-
-input_len_frame = len(NN_input.data[0][0])
-# training parameters passed to "model.fit(...)"
-batch_size = 1
-epochs = 1000
-x_test, y_test = None, None
-
-print('Creating Stateful Model...')
-model_stateful = create_model(stateful=True)
-
-print('Training')
-for i in range(epochs):
-    print('Epoch', i + 1, '/', epochs)
-    # make each fragment a sequence
-    for temp in NN_input.data:
-        if len(temp) < 20:
-            print("temp length too short:", len(temp))
+def data_to_input_output(data_reader, minimum_seq_len, input_seq_len, output_seq_len):
+    xy = []
+    for fragment in data_reader.data:
+        if len(fragment) < minimum_seq_len:
+            print("sequence length too short:", len(fragment))
             continue
-        model_stateful.reset_states()
 
-        prepackaged = np.array([[row] for row in temp])
-        # length of input sequence
-        input_len_sequence = prepackaged.shape[0]
-        # # length of input frame
-        # input_len_frame = prepackaged.shape[2]
+        fragment = np.array([np.array([row]) for row in fragment])
 
         # shift input_seq_len frames for prediction
-        data_input = prepackaged[:-input_seq_len]
-        expected_output = prepackaged[input_seq_len:]
+        data_input = fragment[:-input_seq_len]
+        expected_output = fragment[input_seq_len:]
+        xy.append(create_input_of_right_length(data_input, expected_output, input_seq_len, output_seq_len))
+    return np.array(xy)
 
-        data_input, expected_output = create_input_of_right_length(data_input, expected_output, input_seq_len)
 
-        expected_output = reshape_2(expected_output, input_len_frame)
-        # print('Showing first frame input and expected output')
-        # plt.subplot(411)
-        # plt.hist(jsonGameProcessor.x_vels, bins=100, range=(-2, 2))
-        # plt.subplot(412)
-        # plt.hist(jsonGameProcessor.y_vels, bins=100, range=(-2, 2))
-        # plt.subplot(413)
-        # plt.plot(jsonGameProcessor.x_vels)
-        # plt.subplot(414)
-        # plt.plot(jsonGameProcessor.y_vels)
-        # plt.show()
+def main():
+    # The input sequence length that the LSTM is trained on for each output point
+    input_seq_len = 1
+    # The output sequence length that the LSTM is trained on
+    output_seq_len = 30
 
-        # print("before split_data:", data_input.shape, expected_output.shape)
-        # (x_train, y_train), (x_test, y_test) = split_data(data_input, expected_output)
-        x_train, y_train = data_input, expected_output
-        if None is x_test:
-            print("created test")
-            x_test, y_test = x_train, y_train
-            continue
-        print('x_train.shape: ', x_train.shape)
-        print('y_train.shape: ', y_train.shape)
-        print('x_test.shape: ', x_test.shape)
-        print('y_test.shape: ', y_test.shape)
+    minimum_seq_len = 100  # 30 frames per second,
+    batch_size = 1
+    epochs = 5
 
-        model_stateful.fit(x_train,
-                           y_train,
-                           batch_size=batch_size,
-                           epochs=1,
-                           verbose=1,
-                           validation_data=(x_test, y_test),
-                           shuffle=False)
+    save_model = True
+    save_model_at_epochs = [2 ** i for i in range(int(np.log2(epochs) + 1))]
+    save_model_at_epochs.append(epochs-1)
+    save_model_at_epochs.insert(0, 0)
 
-print('Predicting')
-# predicted_stateful = model_stateful.predict(x_test, batch_size=batch_size)
+    # for reproducibility
+    np.random.seed(1995)
 
-save_nn(model_stateful, name="lstm")
+    print("Loading games...")
+    data_reader = load_data_reader()
+    input_len_frame = len(data_reader.data[0][0])  # the length of a single frame
+    print("Loading done!")
+    print("features used from dataset:", set(data_reader.data_keys))
 
-# dg = gamedrawer.GameDrawer()
-#
-# print('Creating Stateless Model...')
-# model_stateless = create_model(stateful=False)
-#
-# print('Training')
-# model_stateless.fit(x_train,
-#                     y_train,
-#                     batch_size=batch_size,
-#                     epochs=epochs,
-#                     verbose=1,
-#                     validation_data=(x_test, y_test),
-#                     shuffle=False)
-#
-# print('Predicting')
-# predicted_stateless = model_stateless.predict(x_test, batch_size=batch_size)
-#
-# # ----------------------------
-#
-# print('Plotting Results')
-# plt.subplot(3, 1, 1)
-# plt.plot(y_test)
-# plt.title('Expected')
-# plt.subplot(3, 1, 2)
-# # drop the first "tsteps-1" because it is not possible to predict them
-# # since the "previous" timesteps to use do not exist
-# plt.plot((y_test - predicted_stateful).flatten()[tsteps - 1:])
-# plt.title('Stateful: Expected - Predicted')
-# plt.subplot(3, 1, 3)
-# plt.plot((y_test - predicted_stateless).flatten())
-# plt.title('Stateless: Expected - Predicted')
-#
-# plt.figure()
-# plt.plot(y_test)
-# plt.plot(predicted_stateful.flatten()[tsteps - 1:])
-# plt.plot(predicted_stateless.flatten())
-# plt.legend(("expected", "stateful", "stateless"))
-# plt.show()
+    print('Creating Stateful Model...')
+    model_stateful = create_model(True, batch_size, input_seq_len, input_len_frame, output_seq_len)
+    print(model_stateful.summary())
+
+    # create the trainable data:
+    print("preparing data...")
+    xy = data_to_input_output(data_reader, minimum_seq_len, input_seq_len, output_seq_len)
+    print("produced data with shape", xy.shape)
+
+    print("splitting data...")
+    xy_train, xy_test = split_train_test(xy, 0.8)
+    print("produced train and test set, sizes:", np.shape(xy_train), np.shape(xy_test))
+
+    print('Training')
+    with open("logs/lstmlog.txt", "w") as logfile:
+        for epoch in range(epochs):
+            print('Epoch', epoch + 1, '/', epochs)
+            # shuffle the fragments
+            np.random.shuffle(xy_train)
+            for x, y in xy_train:
+                # reset the memory of the network at the start of each continuous fragment
+                model_stateful.reset_states()
+                # choose one of the test sequences:
+                test_index = np.random.randint(0, xy_test.shape[0])
+                history_callback = model_stateful.fit(x,
+                                                      y,
+                                                      batch_size=batch_size,
+                                                      epochs=1,
+                                                      verbose=1,
+                                                      validation_data=(xy_test[test_index][0], xy_test[test_index][1]),
+                                                      shuffle=False)
+                out_dict = {"epoch": epoch}
+                out_dict.update(history_callback.history)
+                logfile.write(json.dumps(out_dict))
+                logfile.write('\n')
+            if save_model:
+                if epoch in save_model_at_epochs:
+                    save_nn(model_stateful, name="lstm" + str(epoch))
+
+
+if __name__ == '__main__':
+    main()

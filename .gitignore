@@ -64,3 +64,11 @@ venv/
 lstm_text_generation\.py
 
 logs/2018-06-20_11-18_TIGERs_Mannheim-vs-ER-Force\.log
+
+logs/testfile\.json
+
+Saved_models/
+
+logs/lstmlog\.txt
+
+create_test_file\.py
