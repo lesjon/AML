@@ -7,6 +7,7 @@ https://keras.io/layers/recurrent/#lstm
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Reshape
+from keras.regularizers import l2
 import jsonGameProcessorV2
 # import gamedrawer
 from save_load_nn import *
@@ -50,8 +51,8 @@ def create_model(stateful, batch_size, input_seq_len, input_len_frame, output_se
                    recurrent_initializer='orthogonal',
                    bias_initializer='zeros',
                    unit_forget_bias=True,
-                   kernel_regularizer=None,
-                   recurrent_regularizer=None,
+                   kernel_regularizer=l2(0.01),
+                   recurrent_regularizer=l2(0.01),
                    bias_regularizer=None,
                    activity_regularizer=None,
                    kernel_constraint=None,
@@ -68,9 +69,14 @@ def create_model(stateful, batch_size, input_seq_len, input_len_frame, output_se
                    dropout=0.01,
                    recurrent_dropout=0.01,
                    implementation=1,
+                   kernel_regularizer=l2(0.01),
+                   recurrent_regularizer=l2(0.01),
                    return_sequences=True))  # Needs be true for all but the last layer)
-    model.add(LSTM(average_input_output))
+    model.add(LSTM(average_input_output,
+                   kernel_regularizer=l2(0.01),
+                   recurrent_regularizer=l2(0.01)))
     model.add(Dense(output_seq_len * input_len_frame,
+                    kernel_regularizer=l2(0.01),
                     activation=None))
     model.add(Reshape((output_seq_len, input_len_frame)))
     model.compile(loss='mse', optimizer='adam')
