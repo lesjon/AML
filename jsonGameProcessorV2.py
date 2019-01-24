@@ -10,38 +10,47 @@ y_scaling = .01#.0045
 clip = True
 
 
-class JsonToArray:
+class JsonGameReader:
     """
     JsonToArray is an object that takes a json file with frames from a RoboCup SSL league game
     it will then hold transform the data into a flat array so it can be passed to a neural network
     it provides functions to switch between the json style dicts and the array of naked numbers
     """
-    data = []  # [0 for z in range(1)]
-    data_keys = []
     json_data = []
-    keys_to_ignore = []
-    group_sizes = []
 
-    object_group_keys = ["robots_yellow", "robots_blue", "balls"]
-
-    def __init__(self, path_to_file='', keys_to_ignore=()):
+    def __init__(self, path_to_file=''):
         """read the data from the location pointed to by path_to_file and process the file
         :param: path_to_file path to the first file to load
         :return: this object
         """
-        self.keys_to_ignore = keys_to_ignore
         if path_to_file:
             self.add_file_to_data(path_to_file)
 
-    def add_file_to_data(self, path, verbose=2):
-        def dict2lists(dict_to_split):
-            return list(dict_to_split.keys()), list(dict_to_split.values())
-
+    def add_file_to_data(self, path):
+        """read the data from the location pointed to by path_to_file and process the file
+        :param: path_to_file path to the first file to load
+        """
         with open(path, "r") as read_file:
             fragments = json.load(read_file)
-        self.json_data.append(fragments)
-        # keys, robots_yellow_keys, robots_blue_keys, balls_keys = [], [], [], []
-        for fragment_n, fragment in enumerate(fragments):
+        self.json_data += fragments
+
+
+class JsonToRawData:
+    data = []
+    data_keys = []
+    keys_to_ignore = []
+    group_sizes = []
+    object_group_keys = ["robots_yellow", "robots_blue", "balls"]
+    frame_dict = {}
+
+    def __init__(self, keys_to_ignore=()):
+        self.keys_to_ignore = keys_to_ignore
+
+    def json_game_reader_to_raw(self, json_game_reader, verbose=2):
+        def dict2lists(dict_to_split):
+            return list(dict_to_split.keys()), list(dict_to_split.values())
+        self.frame_dict = copy.deepcopy(json_game_reader.json_data[0][0])
+        for fragment_n, fragment in enumerate(json_game_reader.json_data):
             for json_frame in fragment:
                 keys, values = dict2lists(json_frame)
 
@@ -64,37 +73,23 @@ class JsonToArray:
                 balls_keys = []
                 balls_values = []
                 for robot in values[keys.index(self.object_group_keys[0])]:
-                    # robot['x_vel'] = robot['x_vel'] / x_scaling
-                    # robot['y_vel'] = robot['y_vel'] / y_scaling
-                    # x_vels.append(robot['x_vel'])
-                    # y_vels.append(robot['y_vel'])
                     k, v = dict2lists(robot)
-                    robots_yellow_keys.extend(k)#[1:])
-                    robots_yellow_values.extend(v)#[1:])
+                    robots_yellow_keys.extend(k)
+                    robots_yellow_values.extend(v)
 
                 for robot in values[keys.index(self.object_group_keys[1])]:
-                    # robot['x_vel'] = robot['x_vel'] / x_scaling
-                    # robot['y_vel'] = robot['y_vel'] / y_scaling
-                    # x_vels.append(robot['x_vel'])
-                    # y_vels.append(robot['y_vel'])
                     k, v = dict2lists(robot)
-                    robots_blue_keys.extend(k)#[1:])
-                    robots_blue_values.extend(v)#[1:])
+                    robots_blue_keys.extend(k)  # [1:])
+                    robots_blue_values.extend(v)  # [1:])
 
                 for ball in values[keys.index(self.object_group_keys[2])]:
-                    # ball['x_vel'] = ball['x_vel'] / x_scaling
-                    # ball['y_vel'] = ball['y_vel'] / y_scaling
-                    # x_vels.append(ball['x_vel'])
-                    # y_vels.append(ball['y_vel'])
                     balls_keys, balls_values = dict2lists(ball)
+
                 combined_values = robots_yellow_values + robots_blue_values + balls_values
                 self.data_keys = robots_yellow_keys + robots_blue_keys + balls_keys
-                self.group_sizes = [len(robots_yellow_keys), len(robots_blue_keys), len(balls_keys)]
-                for key in self.keys_to_ignore:
-                    # print("key:", key)
-                    # print("key:", self.data_keys)
-                    indices = [i for i, x in enumerate(self.data_keys) if x == key]
-                    # print("indices:", indices)
+
+                for ignore_key in self.keys_to_ignore:
+                    indices = [i for i, x in enumerate(self.data_keys) if x == ignore_key]
                     for index in sorted(indices, reverse=True):
                         del combined_values[index]
                         del self.data_keys[index]
@@ -107,13 +102,10 @@ class JsonToArray:
 
                 if not self.data:
                     self.data = [[combined_values]]
-                    # print("if not shape of self.data", np.shape(self.data))
                 elif len(self.data) <= fragment_n:
                     self.data.append([combined_values])
-                    # print("elif shape of self.data", np.shape(self.data))
                 else:
                     self.data[fragment_n].append(combined_values)
-                    # print("else shape of self.data", np.shape(self.data))
 
     def data_frame_to_dict(self, data_frame, timestamp=0, stage="", command=""):
         """
@@ -123,7 +115,7 @@ class JsonToArray:
         # create a copy of the input so we can pop on it without editing the source
         data_frame_copy = list(data_frame)
         # copy first frame as template for dict
-        return_dict = copy.deepcopy(self.json_data[0][0][0])
+        return_dict = copy.deepcopy(self.frame_dict)
         # create copy of the list of keys
         all_keys = copy.copy(self.data_keys)
         # set the not stored parameters
@@ -132,35 +124,24 @@ class JsonToArray:
         return_dict['command'] = command
         # TODO also add this for the the robot_id's
 
-        key = all_keys.pop(0)
         for group_key in self.object_group_keys:
-            print("group_key", group_key)
-            print("return_dict", return_dict)
             if len(all_keys) < 1:
                 break
-            first_key = None
-            for robot_or_ball in return_dict[group_key]:
-                print("robot_or_ball", robot_or_ball)
+            for robot_or_ball_n in range(len(return_dict[group_key])):
+                first_key = None
+                # print("robot_or_ball_n", robot_or_ball_n)
+                robot_or_ball = dict.fromkeys(return_dict[group_key][robot_or_ball_n].keys(), 0)
                 if len(all_keys) < 1:
                     break
 
                 while True:
-                    robot_or_ball[key] = data_frame_copy.pop(0)
+                    if first_key is all_keys[0]:
+                        break
                     key = all_keys.pop(0)
-                    if len(all_keys) < 1:
-                        break
-                    if first_key is key:
-                        break
                     if None is first_key:
                         first_key = key
-
-        # for group_key in self.object_group_keys:
-        #         for n, data_key in enumerate(self.data_keys):
-        #             length_of_object = len(return_dict[group_key][0])
-        #             index_in_object_array = n // length_of_object
-        #             if len(data_frame_copy):
-        #                 return_dict[group_key][index_in_object_array][data_key] = data_frame_copy.pop(0)
-        #             else:
-        #                 return_dict[group_key][index_in_object_array][data_key] = -1
-
+                    robot_or_ball[key] = data_frame_copy.pop(0)
+                    if len(all_keys) < 1:
+                        break
+                return_dict[group_key][robot_or_ball_n] = robot_or_ball
         return return_dict

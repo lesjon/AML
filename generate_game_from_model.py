@@ -5,7 +5,7 @@ import numpy as np
 
 model_stateful = load_nn(name="lstm")
 
-NN_input = jsonGameProcessorV2.JsonToArray()
+NN_input = jsonGameProcessorV2.JsonGameReader()
 NN_input.add_file_to_data("Resources/LogsCut/2018-06-18_09-06_ZJUNlict-vs-UMass_Minutebots.json", verbose=0)
 
 frame = NN_input.data[0][0]

@@ -8,6 +8,7 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Reshape
 from keras.regularizers import l2
+from keras.optimizers import adam
 import jsonGameProcessorV2
 # import gamedrawer
 from save_load_nn import *
@@ -79,7 +80,8 @@ def create_model(stateful, batch_size, input_seq_len, input_len_frame, output_se
                     kernel_regularizer=l2(0.01),
                     activation=None))
     model.add(Reshape((output_seq_len, input_len_frame)))
-    model.compile(loss='mse', optimizer='adam')
+    optim = adam(lr=0.00001)
+    model.compile(loss='mse', optimizer=optim)
     return model
 
 
@@ -89,36 +91,39 @@ def split_train_test(all_xy, ratio):
 
 
 def load_data_reader():
-    data_reader = jsonGameProcessorV2.JsonToArray(keys_to_ignore=('robot_id', 'x_vel', 'y_vel'))
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_09-06_ZJUNlict-vs-UMass_Minutebots.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_11-09_TIGERs_Mannheim-vs-RoboTeam_Twente.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_12-41_KIKS-vs-Immortals.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_14-04_ER-Force-vs-UMass_Minutebots.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_15-55_CMμs-vs-RoboTeam_Twente.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_17-22_ZJUNlict-vs-KIKS.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_19-15_TIGERs_Mannheim-vs-RoboDragons.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_21-13_Immortals-vs-ER-Force.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_09-50_KIKS-vs-ER-Force.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_11-36_RoboDragons-vs-CMμs.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_13-23_UMass_Minutebots-vs-Immortals.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_15-34_ER-Force-vs-ZJUNlict.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_16-35_RoboDragons-vs-RoboTeam_Twente.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_18-01_UMass_Minutebots-vs-KIKS.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_19-24_CMμs-vs-TIGERs_Mannheim.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_20-30_ZJUNlict-vs-Immortals.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_09-13_KIKS-vs-RoboDragons.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_11-18_TIGERs_Mannheim-vs-ER-Force.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_12-37_CMμs-vs-ZJUNlict.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_14-11_UMass_Minutebots-vs-RoboTeam_Twente.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_15-57_RoboDragons-vs-Immortals.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_18-08_UMass_Minutebots-vs-ER-Force.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_19-27_Immortals-vs-ZJUNlict.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_19-39_Immortals-vs-ZJUNlict.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_21-21_TIGERs_Mannheim-vs-CMμs.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-21_09-12_ER-Force-vs-ZJUNlict.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-21_11-36_TIGERs_Mannheim-vs-ZJUNlict.json", verbose=0)
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-21_14-09_ZJUNlict-vs-CMμs.json", verbose=0)
-    return data_reader
+    data_reader = jsonGameProcessorV2.JsonGameReader()
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_09-06_ZJUNlict-vs-UMass_Minutebots.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_11-09_TIGERs_Mannheim-vs-RoboTeam_Twente.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_12-41_KIKS-vs-Immortals.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_14-04_ER-Force-vs-UMass_Minutebots.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_15-55_CMμs-vs-RoboTeam_Twente.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_17-22_ZJUNlict-vs-KIKS.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_19-15_TIGERs_Mannheim-vs-RoboDragons.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_21-13_Immortals-vs-ER-Force.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_09-50_KIKS-vs-ER-Force.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_11-36_RoboDragons-vs-CMμs.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_13-23_UMass_Minutebots-vs-Immortals.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_15-34_ER-Force-vs-ZJUNlict.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_16-35_RoboDragons-vs-RoboTeam_Twente.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_18-01_UMass_Minutebots-vs-KIKS.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_19-24_CMμs-vs-TIGERs_Mannheim.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_20-30_ZJUNlict-vs-Immortals.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_09-13_KIKS-vs-RoboDragons.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_11-18_TIGERs_Mannheim-vs-ER-Force.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_12-37_CMμs-vs-ZJUNlict.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_14-11_UMass_Minutebots-vs-RoboTeam_Twente.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_15-57_RoboDragons-vs-Immortals.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_18-08_UMass_Minutebots-vs-ER-Force.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_19-27_Immortals-vs-ZJUNlict.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_19-39_Immortals-vs-ZJUNlict.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_21-21_TIGERs_Mannheim-vs-CMμs.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-21_09-12_ER-Force-vs-ZJUNlict.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-21_11-36_TIGERs_Mannheim-vs-ZJUNlict.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-21_14-09_ZJUNlict-vs-CMμs.json")
+
+    raw_data = jsonGameProcessorV2.JsonToRawData(keys_to_ignore=('robot_id', 'x_vel', 'y_vel'))
+    raw_data.json_game_reader_to_raw(data_reader, verbose=0)
+    return raw_data
 
 
 def data_to_input_output(data_reader, minimum_seq_len, input_seq_len, output_seq_len):
@@ -171,6 +176,7 @@ def main():
     print("produced data with shape", xy.shape)
 
     print("splitting data...")
+    np.random.shuffle(xy)  # shuffle first to get varied test sequences
     xy_train, xy_test = split_train_test(xy, 0.8)
     print("produced train and test set, sizes:", np.shape(xy_train), np.shape(xy_test))
 
