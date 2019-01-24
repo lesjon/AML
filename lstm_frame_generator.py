@@ -38,7 +38,7 @@ def create_input_of_right_length(x, y, n_samples_input, n_samples_output):
 def create_model(stateful, batch_size, input_seq_len, input_len_frame, output_seq_len, dropout):
     model = Sequential()
     average_input_output = input_seq_len * input_len_frame + output_seq_len * input_len_frame
-    average_input_output //= 2
+    average_input_output //= 200
     model.add(LSTM(average_input_output,
                    input_shape=(input_seq_len, input_len_frame),
                    batch_size=batch_size,
@@ -81,8 +81,6 @@ def create_model(stateful, batch_size, input_seq_len, input_len_frame, output_se
                     kernel_regularizer=None,
                     activation=None))
     model.add(Reshape((output_seq_len, input_len_frame)))
-    optim = adam(lr=0.000001)
-    model.compile(loss='mse', optimizer=optim)
     return model
 
 
@@ -147,6 +145,7 @@ def data_to_input_output(data_reader, minimum_seq_len, input_seq_len, output_seq
     return np.array(xy)
 
 
+
 def main():
     # The input sequence length that the LSTM is trained on for each output point
     input_seq_len = 1
@@ -173,7 +172,12 @@ def main():
     print("features used from dataset:", set(data_reader.data_keys))
 
     print('Creating Stateful Model...')
-    model_stateful = create_model(True, batch_size, input_seq_len, input_len_frame, output_seq_len, dropout)
+    import sys
+    if len(sys.argv) > 1:
+        model_stateful = load_nn(str(sys.argv[1]))
+    else:
+        model_stateful = create_model(True, batch_size, input_seq_len, input_len_frame, output_seq_len, dropout)
+    model_stateful.compile(loss='mse', optimizer=adam(lr=0.000001))
     model_stateful.summary()
 
     # create the trainable data:
