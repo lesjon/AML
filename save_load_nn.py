@@ -1,4 +1,4 @@
-import tensorflow as tf
+import keras
 
 
 def save_nn(nn_model, name="model"):
@@ -11,12 +11,12 @@ def save_nn(nn_model, name="model"):
     print("Saved model " + name + " to disk")
 
 
-def load_nn(name="model"):
+def load_nn(name="model", repository=keras):
     # load json and create model
     json_file = open("Saved_models/" + name + ".json", 'r')
     loaded_model_json = json_file.read()
     json_file.close()
-    loaded_model = tf.keras.models.model_from_json(loaded_model_json)
+    loaded_model = repository.models.model_from_json(loaded_model_json)
     # load weights into new model
     loaded_model.load_weights("Saved_models/" + name + ".h5")
     print("Loaded model " + name + " from disk")
