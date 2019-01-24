@@ -34,7 +34,7 @@ def create_input_of_right_length(x, y, n_samples_input, n_samples_output):
     else:
         y_out = y_out[0: x_out.shape[0]]
 
-    return x_out, y_out
+    return [x_out, y_out]
 
 
 def create_model(stateful, batch_size, input_seq_len, input_len_frame, output_seq_len, dropout):
@@ -100,48 +100,57 @@ def load_data_reader():
     data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_12-41_KIKS-vs-Immortals.json")
     data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_14-04_ER-Force-vs-UMass_Minutebots.json")
     data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_15-55_CMμs-vs-RoboTeam_Twente.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_17-22_ZJUNlict-vs-KIKS.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_19-15_TIGERs_Mannheim-vs-RoboDragons.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_21-13_Immortals-vs-ER-Force.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_09-50_KIKS-vs-ER-Force.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_11-36_RoboDragons-vs-CMμs.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_13-23_UMass_Minutebots-vs-Immortals.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_15-34_ER-Force-vs-ZJUNlict.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_16-35_RoboDragons-vs-RoboTeam_Twente.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_18-01_UMass_Minutebots-vs-KIKS.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_19-24_CMμs-vs-TIGERs_Mannheim.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_20-30_ZJUNlict-vs-Immortals.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_09-13_KIKS-vs-RoboDragons.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_11-18_TIGERs_Mannheim-vs-ER-Force.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_12-37_CMμs-vs-ZJUNlict.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_14-11_UMass_Minutebots-vs-RoboTeam_Twente.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_15-57_RoboDragons-vs-Immortals.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_18-08_UMass_Minutebots-vs-ER-Force.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_19-27_Immortals-vs-ZJUNlict.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_19-39_Immortals-vs-ZJUNlict.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_21-21_TIGERs_Mannheim-vs-CMμs.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-21_09-12_ER-Force-vs-ZJUNlict.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-21_11-36_TIGERs_Mannheim-vs-ZJUNlict.json")
-    data_reader.add_file_to_data("Resources/LogsCut/2018-06-21_14-09_ZJUNlict-vs-CMμs.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_17-22_ZJUNlict-vs-KIKS.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_19-15_TIGERs_Mannheim-vs-RoboDragons.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_21-13_Immortals-vs-ER-Force.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_09-50_KIKS-vs-ER-Force.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_11-36_RoboDragons-vs-CMμs.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_13-23_UMass_Minutebots-vs-Immortals.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_15-34_ER-Force-vs-ZJUNlict.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_16-35_RoboDragons-vs-RoboTeam_Twente.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_18-01_UMass_Minutebots-vs-KIKS.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_19-24_CMμs-vs-TIGERs_Mannheim.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_20-30_ZJUNlict-vs-Immortals.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_09-13_KIKS-vs-RoboDragons.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_11-18_TIGERs_Mannheim-vs-ER-Force.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_12-37_CMμs-vs-ZJUNlict.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_14-11_UMass_Minutebots-vs-RoboTeam_Twente.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_15-57_RoboDragons-vs-Immortals.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_18-08_UMass_Minutebots-vs-ER-Force.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_19-27_Immortals-vs-ZJUNlict.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_19-39_Immortals-vs-ZJUNlict.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_21-21_TIGERs_Mannheim-vs-CMμs.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-21_09-12_ER-Force-vs-ZJUNlict.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-21_11-36_TIGERs_Mannheim-vs-ZJUNlict.json")
+    # data_reader.add_file_to_data("Resources/LogsCut/2018-06-21_14-09_ZJUNlict-vs-CMμs.json")
 
     raw_data = jsonGameProcessorV2.JsonToRawData(keys_to_ignore=('robot_id', 'x_vel', 'y_vel'))
     raw_data.json_game_reader_to_raw(data_reader, verbose=0)
     return raw_data
 
 
-def data_to_input_output(data_reader, minimum_seq_len, input_seq_len, output_seq_len):
+def data_to_input_output(data_reader, minimum_seq_len, input_seq_len, output_seq_len, batch_size):
     xy = []
     for fragment in data_reader.data:
-        if len(fragment) < minimum_seq_len:
+        if len(fragment) < minimum_seq_len or len(fragment) < input_seq_len + output_seq_len + batch_size:
             print("sequence length too short:", len(fragment))
             continue
 
         fragment = np.array([np.array([row]) for row in fragment])
-
+        print("shape(fragment):", np.shape(fragment))
         # shift input_seq_len frames for prediction
         data_input = fragment[:-input_seq_len]
         expected_output = fragment[input_seq_len:]
+
         xy.append(create_input_of_right_length(data_input, expected_output, input_seq_len, output_seq_len))
+
+        print("shape of xy:", len(xy), len(xy[-1]), len(xy[-1][0]), len(xy[-1][0][0]), len(xy[-1][0][0][0]))
+        cut_off = len(xy[-1][0]) % batch_size
+        print("cut_off:", cut_off)
+        if 0 is not cut_off:
+            xy[-1][0] = xy[-1][0][:-cut_off]
+            xy[-1][1] = xy[-1][1][:-cut_off]
+        print("shape of xy:", len(xy), len(xy[-1]), len(xy[-1][0]), len(xy[-1][0][0]), len(xy[-1][0][0][0]))
     return np.array(xy)
 
 
@@ -152,7 +161,7 @@ def main():
     output_seq_len = 30
 
     minimum_seq_len = 50  # 30 frames per second,
-    batch_size = 1
+    batch_size = 32
     epochs = 5
     dropout = 0.3
 
@@ -176,7 +185,7 @@ def main():
 
     # create the trainable data:
     print("preparing data...")
-    xy = data_to_input_output(data_reader, minimum_seq_len, input_seq_len, output_seq_len)
+    xy = data_to_input_output(data_reader, minimum_seq_len, input_seq_len, output_seq_len, batch_size)
     print("produced data with shape", xy.shape)
 
     print("splitting data...")
