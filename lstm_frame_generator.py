@@ -135,20 +135,15 @@ def data_to_input_output(data_reader, minimum_seq_len, input_seq_len, output_seq
             continue
 
         fragment = np.array([np.array([row]) for row in fragment])
-        print("shape(fragment):", np.shape(fragment))
         # shift input_seq_len frames for prediction
         data_input = fragment[:-input_seq_len]
         expected_output = fragment[input_seq_len:]
-
         xy.append(create_input_of_right_length(data_input, expected_output, input_seq_len, output_seq_len))
 
-        print("shape of xy:", len(xy), len(xy[-1]), len(xy[-1][0]), len(xy[-1][0][0]), len(xy[-1][0][0][0]))
         cut_off = len(xy[-1][0]) % batch_size
-        print("cut_off:", cut_off)
         if 0 is not cut_off:
             xy[-1][0] = xy[-1][0][:-cut_off]
             xy[-1][1] = xy[-1][1][:-cut_off]
-        print("shape of xy:", len(xy), len(xy[-1]), len(xy[-1][0]), len(xy[-1][0][0]), len(xy[-1][0][0][0]))
     return np.array(xy)
 
 
