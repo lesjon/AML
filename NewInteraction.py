@@ -24,7 +24,7 @@ def train_on_opponent(bot1, bot2, ball):
 def train_cycle(team1, team2, ball):
     t1len = tf.shape(team1)[0]
     t2len = tf.shape(team2)[0]
-    state = tf.Variable(tf.zeros([1,6]), dtype = tf.float32, trainable=False)    # Create dataholder for estimates of bot positions
+    state = tf.Variable(tf.zeros([0,6]), dtype = tf.float32, trainable=False)    # Create dataholder for estimates of bot positions
 
     i = tf.constant(0, dtype=tf.int32)
 
@@ -34,23 +34,26 @@ def train_cycle(team1, team2, ball):
 
     def teamloop(j, state):
         state = tf.reduce_sum([state, train_on_teammate(tf.gather_nd(team1, [i]), tf.gather_nd(team1, [j]), ball)], 0)
-        return tf.add(j,1)
+        return tf.add(j,1), state
 
     def opponentloop(k, state):
         state = tf.reduce_sum([state, train_on_teammate(tf.gather_nd(team1, [i]), tf.gather_nd(team2, [k]), ball)], 0)
-        return tf.add(k,1)
+        return tf.add(k,1), state
 
     def outerloop(i, state):
         j = tf.constant(0, dtype=tf.int32)
         k = tf.constant(0, dtype=tf.int32)
-        j = tf.while_loop(while_condition_team, teamloop, [j, state])
-        k = tf.while_loop(while_condition_opponent, opponentloop, [k, state])
-        return tf.add(i,1)
+        bot = tf.zeros([1,6], tf.float32)
+        j, bot = tf.while_loop(while_condition_team, teamloop, [j, bot])
+        k, bot = tf.while_loop(while_condition_opponent, opponentloop, [k, bot])
+        state = tf.concat([state, bot], 0)
+        return tf.add(i,1), state
 
-    i = tf.while_loop(while_condition_outer, outerloop, [i, state])
-    state[0].assign(train_on_opponent(team1[0], team2[0], ball))
-    sliced = tf.slice(state, [0,0], [t1len, 6])
-    division = tf.divide(sliced, tf.to_float(t1len+t2len))
+    i, state = tf.while_loop(while_condition_outer, outerloop, [i, state], shape_invariants=[tf.TensorShape(None), tf.TensorShape([None, 6])])
+
+    # state[0].assign(train_on_opponent(team1[0], team2[0], ball))
+    # sliced = tf.slice(state, [0,0], [t1len, 6])
+    division = tf.divide(state, tf.to_float(t1len+t2len))
     return division
 
 
@@ -73,5 +76,5 @@ with tf.Graph().as_default():
         tf.global_variables_initializer().run()
         for i in range(1,5000):
             for frame in pairedFrames:
-                _, calcLoss = sess.run([train_op, loss], feed_dict={tf_t1: frame[0, 0], tf_t2: frame[0, 1], tf_ball: frame[0, 2], tf_l: frame[1, 0]})
+                calcLoss = sess.run([tf_y], feed_dict={tf_t1: frame[0, 0], tf_t2: frame[0, 1], tf_ball: frame[0, 2], tf_l: frame[1, 0]})
             print(i, " Loss: ", calcLoss)
