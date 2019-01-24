@@ -8,7 +8,7 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Reshape
 from keras.regularizers import l2
-from keras.optimizers import adam
+from keras.optimizers import adam, SGD, RMSprop
 import jsonGameProcessorV2
 from save_load_nn import *
 import json
@@ -38,7 +38,7 @@ def create_input_of_right_length(x, y, n_samples_input, n_samples_output):
 def create_model(stateful, batch_size, input_seq_len, input_len_frame, output_seq_len, dropout):
     model = Sequential()
     average_input_output = input_seq_len * input_len_frame + output_seq_len * input_len_frame
-    average_input_output //= 200
+    average_input_output //= 2
     model.add(LSTM(average_input_output,
                    input_shape=(input_seq_len, input_len_frame),
                    batch_size=batch_size,
@@ -145,7 +145,6 @@ def data_to_input_output(data_reader, minimum_seq_len, input_seq_len, output_seq
     return np.array(xy)
 
 
-
 def main():
     # The input sequence length that the LSTM is trained on for each output point
     input_seq_len = 1
@@ -153,9 +152,11 @@ def main():
     output_seq_len = 30
 
     minimum_seq_len = 50  # 30 frames per second,
-    batch_size = 10
+    batch_size = 1
     epochs = 100
     dropout = 0.4
+    learning_rate = 0.00001
+    train_test_ratio = 0.9
 
     save_model = True
     save_model_at_epochs = [2 ** i for i in range(int(np.log2(epochs) + 1))]
@@ -177,7 +178,7 @@ def main():
         model_stateful = load_nn(str(sys.argv[1]))
     else:
         model_stateful = create_model(True, batch_size, input_seq_len, input_len_frame, output_seq_len, dropout)
-    model_stateful.compile(loss='mse', optimizer=adam(lr=0.000001))
+    model_stateful.compile(loss='mse', optimizer=adam(lr=learning_rate))
     model_stateful.summary()
 
     # create the trainable data:
@@ -187,12 +188,15 @@ def main():
 
     print("splitting data...")
     np.random.shuffle(xy)  # shuffle first to get varied test sequences
-    xy_train, xy_test = split_train_test(xy, 0.8)
+    xy_train, xy_test = split_train_test(xy, train_test_ratio)
     print("produced train and test set, sizes:", np.shape(xy_train), np.shape(xy_test))
 
     print('Training')
     with open("logs/lstmlog.txt", "w") as logfile:
+        logfile.write('[{"model_summary":"')
         model_stateful.summary(print_fn=lambda line: logfile.write(line + '\n'))
+        logfile.write('",')
+        logfile.write('"data":[')
         for epoch in range(epochs):
             print('Epoch', epoch + 1, '/', epochs)
             # shuffle the fragments
@@ -212,11 +216,12 @@ def main():
                 out_dict = {"epoch": epoch}
                 out_dict.update(history_callback.history)
                 logfile.write(json.dumps(out_dict))
-                logfile.write('\n')
-                logfile.flush()
+                logfile.write(',\n')
+            logfile.flush()
             if save_model:
                 if epoch in save_model_at_epochs:
                     save_nn(model_stateful, name="lstm" + str(epoch))
+        logfile.write('],{"end":1}]')
 
 
 if __name__ == '__main__':

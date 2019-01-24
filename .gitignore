@@ -100,3 +100,7 @@ Saved_models/lstm\.h5
 Saved_models/rnn\.h5
 
 Saved_models/rnn\.json
+
+Saved_models/lstm16\.h5
+
+Saved_models/lstm16\.json
