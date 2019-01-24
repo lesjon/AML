@@ -1,55 +1,77 @@
 import gamedrawer
 import jsonGameProcessor
+import jsonGameProcessorV2
 import numpy as np
 import tensorflow as tf
+from time import sleep
+# import matplotlib.pyplot as plt
+# import lstm_frame_generator
+
+
+def load_data_reader():
+    data_reader = jsonGameProcessorV2.JsonGameReader()
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_09-06_ZJUNlict-vs-UMass_Minutebots.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_11-09_TIGERs_Mannheim-vs-RoboTeam_Twente.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_12-41_KIKS-vs-Immortals.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_14-04_ER-Force-vs-UMass_Minutebots.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_15-55_CMμs-vs-RoboTeam_Twente.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_17-22_ZJUNlict-vs-KIKS.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_19-15_TIGERs_Mannheim-vs-RoboDragons.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-18_21-13_Immortals-vs-ER-Force.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_09-50_KIKS-vs-ER-Force.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_11-36_RoboDragons-vs-CMμs.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_13-23_UMass_Minutebots-vs-Immortals.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_15-34_ER-Force-vs-ZJUNlict.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_16-35_RoboDragons-vs-RoboTeam_Twente.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_18-01_UMass_Minutebots-vs-KIKS.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_19-24_CMμs-vs-TIGERs_Mannheim.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-19_20-30_ZJUNlict-vs-Immortals.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_09-13_KIKS-vs-RoboDragons.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_11-18_TIGERs_Mannheim-vs-ER-Force.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_12-37_CMμs-vs-ZJUNlict.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_14-11_UMass_Minutebots-vs-RoboTeam_Twente.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_15-57_RoboDragons-vs-Immortals.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_18-08_UMass_Minutebots-vs-ER-Force.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_19-27_Immortals-vs-ZJUNlict.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_19-39_Immortals-vs-ZJUNlict.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-20_21-21_TIGERs_Mannheim-vs-CMμs.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-21_09-12_ER-Force-vs-ZJUNlict.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-21_11-36_TIGERs_Mannheim-vs-ZJUNlict.json")
+    data_reader.add_file_to_data("Resources/LogsCut/2018-06-21_14-09_ZJUNlict-vs-CMμs.json")
+
+    raw_data = jsonGameProcessorV2.JsonToRawData(keys_to_ignore=('robot_id', 'x_vel', 'y_vel'))
+    raw_data.json_game_reader_to_raw(data_reader, verbose=0)
+    return raw_data
 
 
 if __name__ == '__main__':
     print("Starting project!")
-    keep_display_on = False
+    keep_display_on = True
     play_whole_match = True
 
-    dg = gamedrawer.GameDrawer()
 
     # NN_input = jsonGameProcessor.JsonToArray("logs/testWriterOutput.json")
-
-    NN_input = jsonGameProcessor.JsonToArray('Resources/Logs/RD_RT.json')
+    # NN_input = jsonGameProcessor.JsonToArray('Resources/Logs/RD_RT.json')
     # NN_input = jsonGameProcessor.JsonToArray("logs/2018-06-18_09-06_ZJUNlict-vs-UMass_Minutebots.log")
-    frame_data_size = len(NN_input.data[0])
+    # NN_input = jsonGameProcessor.JsonToArray("logs/lstm_creation.json")
+    #
+    #
+    # if play_whole_match:
+    #     for frame in NN_input.data:
+    #         dg.draw_json(NN_input.data_frame_to_dict(frame))
+    #         dg.clear_canvas()
+    #         sleep(1/30)
 
+    # NN_input = jsonGameProcessorV2.JsonToArray("logs/lstm_creation.json")
+    NN_input = load_data_reader()
+    dg = gamedrawer.GameDrawer()
+    sleep(1)
     if play_whole_match:
-        for frame in NN_input.data:
-            dg.draw_json(NN_input.data_frame_to_dict(frame))#[0:50]
-            dg.clear_canvas()
-
-    print("create model")
-    # Example of one output for whole sequence
-
-    # define model where LSTM is also output layer
-    model = tf.keras.models.Sequential()
-    model.add(tf.keras.layers.LSTM(1, return_sequences=True, input_shape=(frame_data_size, 1)))
-    model.add(tf.keras.layers.LSTM(1, return_sequences=True))
-    model.add(tf.keras.layers.LSTM(1, return_sequences=True, activation=None))
-    model.compile(optimizer='adam', loss='mse')
-    # input time steps
-    np_data = np.array(NN_input.data)
-    print("np_data shape", np_data.shape)
-    index = int(0.8 * np_data.shape[0])
-    print("index",index)
-    data_for_train = np_data[:index].reshape((-1, frame_data_size, 1))
-    data_for_test = np_data[index:].reshape((-1, frame_data_size, 1))
-    print("data_for_train shape", data_for_train.shape)
-    print("data_for_test shape", data_for_test.shape)
-    (x_train, y_train) = data_for_train[:-1], data_for_train[1:]
-    (x_test, y_test) = data_for_test[:-1],  data_for_test[1:]
-    print("x_train.shape", x_train.shape)
-    print("y_train.shape", y_train.shape)
-
-    model.fit(x_train, y_train, epochs=1, batch_size=5)
-    prediction = list(model.predict(data_for_test[:1]))
-    dg.draw_json(NN_input.data_frame_to_dict(prediction))
-    dg.draw_json(NN_input.data_frame_to_dict(list(data_for_test[0])))
-    # make and show prediction
+        for n, fragment in enumerate(NN_input.data):
+            print(n, "size of fragment:", np.shape(fragment))
+            for frame in fragment:
+                dg.draw_json(NN_input.data_frame_to_dict(frame))
+                dg.clear_canvas()
 
     if keep_display_on:
         dg.wait_till_close()

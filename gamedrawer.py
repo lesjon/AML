@@ -2,6 +2,10 @@ from tkinter import *
 import time
 
 
+def create_circle(canvas, x, y, r, **kwargs):
+    return canvas.create_oval(x - r, y - r, x + r, y + r, **kwargs)
+
+
 class GameDrawer:
     """
     Object with functions to draw SSL game frames on a TKinter canvas
@@ -21,9 +25,6 @@ class GameDrawer:
 
     def __init__(self):
 
-        def _create_circle(self, x, y, r, **kwargs):
-            return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
-        Canvas.create_circle = _create_circle
 
         self.master = Tk()
 
@@ -103,16 +104,16 @@ class GameDrawer:
             '''self.master.after(1000/60, self.draw_game_from_json)
             yield'''
 
-    def draw_json(self, json_data, stipple=None):
+    def draw_json(self, json_data, dash=None):
         """
         This function draws one frame in json/ dict format
         :param json_data: one frame in a dict/ json
-        :param stipple: show these with this stippling
+        :param dasg: show these with this dash
         :return:
         """
         def draw_object(game_object, size, color):
-            y_vel_vector_factor = 4500  # 0.01
-            x_vel_vector_factor = 6000  # 0.01
+            y_vel_vector_factor = 45
+            x_vel_vector_factor = 60
             vel_vector_factor = 2  # 0.01
             x_pos = (game_object['x'] + self.field_width / 2) * self.width / self.field_width
             y_pos = (game_object['y'] + self.field_height / 2) * self.height / self.field_height
@@ -120,13 +121,13 @@ class GameDrawer:
             y_vel = game_object['y_vel']  # + self.field_height / 2) * self.height / self.field_height
             y_vel *= y_vel_vector_factor * vel_vector_factor
             x_vel *= x_vel_vector_factor * vel_vector_factor
-            self.delete_each_frame.append(self.canvas.create_circle(x_pos, y_pos, size, fill=color, stipple=stipple))
-            self.delete_each_frame.append(self.canvas.create_line(x_pos, y_pos, x_pos + x_vel, y_pos + y_vel, width=1))
+            self.delete_each_frame.append(create_circle(self.canvas, x_pos, y_pos, size, fill=color, dash=dash))
+            self.delete_each_frame.append(self.canvas.create_line(x_pos, y_pos, x_pos + x_vel, y_pos + y_vel, width=1, dash=dash))
 
         for robot in json_data['robots_yellow']:
-            draw_object(robot, 10, "yellow")
+            draw_object(robot, 9, "yellow")
         for robot in json_data['robots_blue']:
-            draw_object(robot, 10, "blue")
+            draw_object(robot, 9, "blue")
         # for robot in json_data['robots_orange']:
         #     draw_object(robot, 10, "orange")
         for ball in json_data['balls']:
