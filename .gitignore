@@ -67,10 +67,36 @@ logs/2018-06-20_11-18_TIGERs_Mannheim-vs-ER-Force\.log
 
 logs/testfile\.json
 
-Saved_models/
-
 logs/lstmlog\.txt
 
 create_test_file\.py
 
 logs/lstmlogdiv200\.txt
+
+Saved_models/lstm\.json
+
+Saved_models/lstm0\.h5
+
+Saved_models/lstm0\.json
+
+Saved_models/lstm1\.h5
+
+Saved_models/lstm1\.json
+
+Saved_models/lstm100\.h5
+
+Saved_models/lstm100\.json
+
+Saved_models/lstm2\.h5
+
+Saved_models/lstm2\.json
+
+Saved_models/lstm4\.h5
+
+Saved_models/lstm4\.json
+
+Saved_models/lstm\.h5
+
+Saved_models/rnn\.h5
+
+Saved_models/rnn\.json
