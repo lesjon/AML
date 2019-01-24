@@ -37,7 +37,7 @@ def create_input_of_right_length(x, y, n_samples_input, n_samples_output):
     return x_out, y_out
 
 
-def create_model(stateful, batch_size, input_seq_len, input_len_frame, output_seq_len):
+def create_model(stateful, batch_size, input_seq_len, input_len_frame, output_seq_len, dropout):
     model = Sequential()
     average_input_output = input_seq_len * input_len_frame + output_seq_len * input_len_frame
     average_input_output //= 2
@@ -52,32 +52,35 @@ def create_model(stateful, batch_size, input_seq_len, input_len_frame, output_se
                    recurrent_initializer='orthogonal',
                    bias_initializer='zeros',
                    unit_forget_bias=True,
-                   kernel_regularizer=l2(0.01),
-                   recurrent_regularizer=l2(0.01),
+                   kernel_regularizer=None,
+                   recurrent_regularizer=None,
                    bias_regularizer=None,
                    activity_regularizer=None,
                    kernel_constraint=None,
                    recurrent_constraint=None,
                    bias_constraint=None,
-                   dropout=0.01,
-                   recurrent_dropout=0.01,
+                   dropout=dropout,
+                   recurrent_dropout=0.,
                    implementation=1,
                    return_sequences=True,  # Needs be true for all but the last layer
                    return_state=False,
                    go_backwards=False,
                    unroll=False))
     model.add(LSTM(average_input_output,
-                   dropout=0.01,
-                   recurrent_dropout=0.01,
+                   dropout=dropout,
+                   recurrent_dropout=0.,
                    implementation=1,
-                   kernel_regularizer=l2(0.01),
-                   recurrent_regularizer=l2(0.01),
+                   kernel_regularizer=None,
+                   recurrent_regularizer=None,
                    return_sequences=True))  # Needs be true for all but the last layer)
     model.add(LSTM(average_input_output,
-                   kernel_regularizer=l2(0.01),
-                   recurrent_regularizer=l2(0.01)))
+                   dropout=dropout,
+                   recurrent_dropout=0.,
+                   implementation=1,
+                   kernel_regularizer=None,
+                   recurrent_regularizer=None))
     model.add(Dense(output_seq_len * input_len_frame,
-                    kernel_regularizer=l2(0.01),
+                    kernel_regularizer=None,
                     activation=None))
     model.add(Reshape((output_seq_len, input_len_frame)))
     optim = adam(lr=0.00001)
@@ -151,6 +154,7 @@ def main():
     minimum_seq_len = 50  # 30 frames per second,
     batch_size = 1
     epochs = 5
+    dropout = 0.3
 
     save_model = True
     save_model_at_epochs = [2 ** i for i in range(int(np.log2(epochs) + 1))]
@@ -167,7 +171,7 @@ def main():
     print("features used from dataset:", set(data_reader.data_keys))
 
     print('Creating Stateful Model...')
-    model_stateful = create_model(True, batch_size, input_seq_len, input_len_frame, output_seq_len)
+    model_stateful = create_model(True, batch_size, input_seq_len, input_len_frame, output_seq_len, dropout)
     model_stateful.summary()
 
     # create the trainable data:
