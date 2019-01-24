@@ -81,7 +81,7 @@ def create_model(stateful, batch_size, input_seq_len, input_len_frame, output_se
                     kernel_regularizer=None,
                     activation=None))
     model.add(Reshape((output_seq_len, input_len_frame)))
-    optim = adam(lr=0.00001)
+    optim = adam(lr=0.000001)
     model.compile(loss='mse', optimizer=optim)
     return model
 
@@ -159,8 +159,8 @@ def main():
     output_seq_len = 30
 
     minimum_seq_len = 50  # 30 frames per second,
-    batch_size = 32
-    epochs = 5
+    batch_size = 10
+    epochs = 100
     dropout = 0.4
 
     save_model = True
