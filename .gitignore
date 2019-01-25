@@ -104,3 +104,15 @@ Saved_models/rnn\.json
 Saved_models/lstm16\.h5
 
 Saved_models/lstm16\.json
+
+Saved_models/lstm32\.h5
+
+Saved_models/lstm32\.json
+
+Saved_models/lstm64\.h5
+
+Saved_models/lstm64\.json
+
+Saved_models/lstm99\.h5
+
+Saved_models/lstm99\.json

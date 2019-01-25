@@ -9,6 +9,7 @@ from keras.models import Sequential
 from keras.layers import Dense, LSTM, Reshape
 from keras.regularizers import l2
 from keras.optimizers import adam, SGD, RMSprop
+from keras.losses import mean_squared_error
 import jsonGameProcessorV2
 from save_load_nn import *
 import json
@@ -178,7 +179,11 @@ def main():
         model_stateful = load_nn(str(sys.argv[1]))
     else:
         model_stateful = create_model(True, batch_size, input_seq_len, input_len_frame, output_seq_len, dropout)
-    model_stateful.compile(loss='mse', optimizer=adam(lr=learning_rate))
+    # import keras.backend as K
+
+    def customLoss(yTrue, yPred):
+        return mean_squared_error(yTrue[0, output_seq_len-1], yPred[0, output_seq_len-1])
+    model_stateful.compile(loss=customLoss, optimizer=adam(lr=learning_rate))
     model_stateful.summary()
 
     # create the trainable data:
@@ -221,7 +226,7 @@ def main():
             if save_model:
                 if epoch in save_model_at_epochs:
                     save_nn(model_stateful, name="lstm" + str(epoch))
-        logfile.write('],{"end":1}]')
+        logfile.write(']},{"end":1}]')
 
 
 if __name__ == '__main__':
